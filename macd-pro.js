@@ -1,14 +1,12 @@
-Modified script:
-
 // This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // © Anthony C. https://x.com/anthonycxc
 
 //@version=6
 // ------------------------------------------------------------
 //  MACD Pro
-//  v1.0.5 beta
+//  v1.1.2 beta
 // ------------------------------------------------------------
-indicator(title="MACD Pro", shorttitle="MACD", timeframe="", timeframe_gaps=true)
+indicator(title="MACD Pro", shorttitle="MACD Pro", timeframe="", timeframe_gaps=true)
 
 // Input for MACD Setup
 macd_mode = input.string(title="MACD Mode", defval="Adaptive", options=["Fixed", "Adaptive"], group="MACD Mode", display=display.data_window)
@@ -48,20 +46,21 @@ src = input(title="Source", defval=close, group="Other Settings")
 sma_source = input.string(title="Oscillator MA Type", defval="EMA", options=["SMA", "EMA"], group="Other Settings", display=display.data_window)
 sma_signal = input.string(title="Signal Line MA Type", defval="EMA", options=["SMA", "EMA"], group="Other Settings", display=display.data_window)
 
-// Determine timeframe in minutes
-tf_value = switch timeframe.period
-    "1" => "3m"
-    "2" => "3m"
-    "3" => "3m"
-    "5" => "5m_45m"
-    "15" => "5m_45m"
-    "30" => "5m_45m"
-    "45" => "5m_45m"
-    "60" => "1h_2h"
-    "120" => "1h_2h"
-    "180" => "3h_4h"
-    "240" => "3h_4h"
-    => "1d"
+// Determine timeframe in seconds for robust handling
+int tf_seconds = timeframe.in_seconds()
+string tf_value = na
+if na(tf_seconds)
+    tf_value := "1d"  // Default for non-time-based timeframes like ticks or ranges
+else if tf_seconds <= 180  // 3 minutes or below (including seconds)
+    tf_value := "3m"
+else if tf_seconds <= 2700  // 45 minutes or below
+    tf_value := "5m_45m"
+else if tf_seconds <= 7200  // 2 hours or below
+    tf_value := "1h_2h"
+else if tf_seconds <= 14400  // 4 hours or below
+    tf_value := "3h_4h"
+else
+    tf_value := "1d"
 
 // Select parameters based on MACD Setup
 var int fast_length = 0
